@@ -33,8 +33,7 @@ sap.ui.define([
 
         _loadIncidentsAsXML: function () {
             var that = this;
-            // Add a timestamp to prevent caching
-            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet?ts=" + new Date().getTime();
+            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet";
 
             console.log("Fetching XML from:", sUrl);
 
@@ -42,76 +41,95 @@ sap.ui.define([
                 url: sUrl,
                 method: "GET",
                 headers: {
-                    "Accept": "application/xml, text/xml, */*"
+                    "Accept": "application/xml"
                 },
-                dataType: "xml", // FORCE XML parsing
+                dataType: "xml",
                 success: function (xmlDoc) {
                     console.log("XML Response received");
-                    var $xml = $(xmlDoc);
                     var aIncidents = [];
 
-                    // Parse Atom/XML feed manually
-                    $xml.find("entry").each(function () {
-                        var $entry = $(this);
-                        var $props = $entry.find("m\\:properties, properties"); // Handle namespaces
+                    // Native DOM Parsing to avoid jQuery Namespace issues
+                    var entries = xmlDoc.getElementsByTagName("entry");
+                    // If no entries found directly, try namespaced version (browsers vary)
+                    if (entries.length === 0) entries = xmlDoc.getElementsByTagName("atom:entry");
 
-                        // Fallback if jQuery namespace selector fails
-                        if ($props.length === 0) $props = $entry.find("content").children().first();
+                    console.log("Found entry elements:", entries.length);
 
-                        var incident = {
-                            IncidentId: that._getNodeValue($props, "d\\:IncidentId, IncidentId"),
-                            IncidentDescription: that._getNodeValue($props, "d\\:IncidentDescription, IncidentDescription"),
-                            IncidentStatus: that._getNodeValue($props, "d\\:IncidentStatus, IncidentStatus"),
-                            IncidentPriority: that._getNodeValue($props, "d\\:IncidentPriority, IncidentPriority"),
-                            IncidentDate: that._getNodeValue($props, "d\\:IncidentDate, IncidentDate"),
-                            Plant: that._getNodeValue($props, "d\\:Plant, Plant")
-                        };
+                    for (var i = 0; i < entries.length; i++) {
+                        var entry = entries[i];
 
-                        // Parse Date if string
-                        if (incident.IncidentDate && typeof incident.IncidentDate === "string") {
-                            // Assuming YYYY-MM-DD format from XML like 2025-08-19T00:00:00
-                            incident.IncidentDate = new Date(incident.IncidentDate);
+                        // Find properties container (m:properties)
+                        var properties = entry.getElementsByTagName("m:properties")[0];
+                        if (!properties) properties = entry.getElementsByTagName("properties")[0]; // Fallback
+
+                        // If still not found, search all children for localName 'properties'
+                        if (!properties) {
+                            var children = entry.getElementsByTagName("content")[0].children;
+                            for (var j = 0; j < children.length; j++) {
+                                if (children[j].localName === "properties") {
+                                    properties = children[j];
+                                    break;
+                                }
+                            }
                         }
 
-                        aIncidents.push(incident);
-                    });
+                        if (properties) {
+                            var incident = {
+                                IncidentId: that._getTagValue(properties, "d:IncidentId") || that._getTagValue(properties, "IncidentId"),
+                                IncidentDescription: that._getTagValue(properties, "d:IncidentDescription") || that._getTagValue(properties, "IncidentDescription"),
+                                IncidentStatus: that._getTagValue(properties, "d:IncidentStatus") || that._getTagValue(properties, "IncidentStatus"),
+                                IncidentPriority: that._getTagValue(properties, "d:IncidentPriority") || that._getTagValue(properties, "IncidentPriority"),
+                                IncidentDate: that._getTagValue(properties, "d:IncidentDate") || that._getTagValue(properties, "IncidentDate"),
+                                Plant: that._getTagValue(properties, "d:Plant") || that._getTagValue(properties, "Plant")
+                            };
+
+                            // Parse Date if needed
+                            if (incident.IncidentDate) {
+                                incident.IncidentDate = new Date(incident.IncidentDate);
+                            }
+
+                            aIncidents.push(incident);
+                        }
+                    }
 
                     console.log("Parsed " + aIncidents.length + " incidents from XML");
 
                     if (aIncidents.length > 0) {
                         var oIncidentsModel = new JSONModel(aIncidents);
                         that.getView().setModel(oIncidentsModel, "incidents");
-                        MessageToast.show("Loaded " + aIncidents.length + " incidents (XML)");
+                        MessageToast.show("Loaded " + aIncidents.length + " incidents");
                     } else {
-                        // Fallback: try finding 'd:IncidentId' directly in document
-                        MessageToast.show("XML received but 0 entries found");
+                        MessageToast.show("XML parsed but 0 incidents extracted");
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.error("XML Load Error:", textStatus, errorThrown);
-                    MessageToast.show("XML Request Failed: " + errorThrown);
+                    MessageToast.show("Request Failed: " + errorThrown);
                 }
             });
         },
 
-        // Helper to handle XML namespaces safely
-        _getNodeValue: function ($parent, selector) {
-            var $node = $parent.find(selector);
-            if ($node.length === 0) {
-                // Try selecting by tag name ignoring namespace
-                var tagName = selector.split(",").pop().trim();
-                $node = $parent.find(tagName);
-                // Also search children directly (for m:properties structure)
-                if ($node.length === 0) {
-                    $parent.children().each(function () {
-                        if (this.nodeName.indexOf(tagName) !== -1 || this.nodeName.endsWith(":" + tagName)) {
-                            $node = $(this);
-                            return false;
-                        }
-                    });
+        _getTagValue: function (parent, tagName) {
+            // Try standard getElementsByTagName
+            var elements = parent.getElementsByTagName(tagName);
+
+            // If failed, try ignoring namespace prefix (localName check)
+            if (elements.length === 0 && tagName.indexOf(":") > -1) {
+                var localName = tagName.split(":")[1];
+                var allChildren = parent.children || parent.childNodes;
+                for (var k = 0; k < allChildren.length; k++) {
+                    var node = allChildren[k];
+                    // Check localName or nodeName
+                    if ((node.localName === localName) || (node.nodeName && node.nodeName.endsWith(":" + localName))) {
+                        return node.textContent || node.text;
+                    }
                 }
             }
-            return $node.text();
+
+            if (elements.length > 0) {
+                return elements[0].textContent || elements[0].text;
+            }
+            return "";
         },
 
         onNavBack: function () {
