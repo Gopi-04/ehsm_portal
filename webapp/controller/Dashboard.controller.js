@@ -19,6 +19,7 @@ sap.ui.define([
             var oModel = this.getOwnerComponent().getModel();
             var oViewModel = this.getView().getModel();
             var sEmployeeId = "00000001"; // Hardcoded to match valid user data
+            var that = this;
 
             // Load Profile
             var sProfilePath = oModel.createKey("/ZEHSM_PROFILE_GPSet", {
