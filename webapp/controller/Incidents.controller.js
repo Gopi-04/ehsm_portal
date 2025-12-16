@@ -39,18 +39,24 @@ sap.ui.define([
 
         _loadIncidentsWithFallback: function () {
             var that = this;
-            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet";
+            var oModel = this.getOwnerComponent().getModel();
 
-            // Append Filter if EmployeeId is available
+            // Construct absolute URL using Model's Service URL to ensure correct proxy usage
+            var sServiceUrl = oModel.sServiceUrl;
+            if (!sServiceUrl.endsWith("/")) sServiceUrl += "/";
+            var sUrl = sServiceUrl + "ZEHSM_INCIDENT_GPSet";
+
+            // Explicitly filter by EmployeeId if available
+            // This is likely REQUIRED by the backend to return data
             if (this._sEmployeeId) {
-                // Try both standard OData filter and just passing it (logging to check)
-                console.log("Fetching Incidents for Employee:", this._sEmployeeId);
-                // Note: We are fetching the whole set to match user's browser xml, 
-                // but checking if we can filter by ID might help if backend supports it.
-                // For now, let's keep the URL simple as user proved simple URL works in browser.
+                console.log("Appending Filter for Employee:", this._sEmployeeId);
+                sUrl += "?$filter=EmployeeId eq '" + this._sEmployeeId + "'";
+            } else {
+                // Fallback for testing standard User
+                sUrl += "?$filter=EmployeeId eq '00000001'";
             }
 
-            console.log("Fetching from:", sUrl);
+            console.log("Full AJAX URL:", sUrl);
 
             // 1. Try to fetch real data
             $.ajax({
@@ -58,6 +64,7 @@ sap.ui.define([
                 method: "GET",
                 headers: { "Accept": "application/xml" },
                 dataType: "text",
+                cache: false,
                 success: function (sResponseText) {
                     console.log("Backend Response (" + sResponseText.length + " bytes)");
                     var aIncidents = that._parseWithRegex(sResponseText);
@@ -92,7 +99,7 @@ sap.ui.define([
                 { IncidentId: "INC000051", IncidentDescription: "Fire Accident", IncidentStatus: "Closed", IncidentPriority: "Low", IncidentDate: new Date("2025-06-30"), Plant: "AT01" },
                 { IncidentId: "INC000056", IncidentDescription: "Electrical Hazard", IncidentStatus: "In Progress", IncidentPriority: "Medium", IncidentDate: new Date("2025-06-25"), Plant: "AT01" }
             ];
-            // Filter logic if needed later
+
             this._bindTable(aFallbackData, sMessage);
         },
 
@@ -147,6 +154,7 @@ sap.ui.define([
                 window.history.go(-1);
             } else {
                 var oRouter = UIComponent.getRouterFor(this);
+                // Preserve ID when going back
                 oRouter.navTo("Dashboard", { employeeId: this._sEmployeeId || "00000001" }, true);
             }
         },

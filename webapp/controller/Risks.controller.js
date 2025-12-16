@@ -31,9 +31,22 @@ sap.ui.define([
 
         _loadRisksWithFallback: function () {
             var that = this;
-            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_RISK_GPSet";
+            var oModel = this.getOwnerComponent().getModel();
 
-            console.log("Fetching Risks from:", sUrl);
+            // Construct absolute URL
+            var sServiceUrl = oModel.sServiceUrl;
+            if (!sServiceUrl.endsWith("/")) sServiceUrl += "/";
+            var sUrl = sServiceUrl + "ZEHSM_RISK_GPSet";
+
+            // Explicitly filter by EmployeeId
+            if (this._sEmployeeId) {
+                console.log("Appending Filter for Employee:", this._sEmployeeId);
+                sUrl += "?$filter=EmployeeId eq '" + this._sEmployeeId + "'";
+            } else {
+                sUrl += "?$filter=EmployeeId eq '00000001'";
+            }
+
+            console.log("Full Risks AJAX URL:", sUrl);
 
             // 1. Try to fetch real data
             $.ajax({
@@ -41,6 +54,7 @@ sap.ui.define([
                 method: "GET",
                 headers: { "Accept": "application/xml" },
                 dataType: "text",
+                cache: false,
                 success: function (sResponseText) {
                     console.log("Backend Response (" + sResponseText.length + " bytes)");
                     var aRisks = that._parseWithRegex(sResponseText);
