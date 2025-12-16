@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/UIComponent",
-    "sap/ui/core/routing/History"
-], function (Controller, UIComponent, History) {
+    "sap/ui/core/routing/History",
+    "sap/ui/model/json/JSONModel"
+], function (Controller, UIComponent, History, JSONModel) {
     "use strict";
 
     return Controller.extend("com.kaar.ehsm.controller.Incidents", {
@@ -23,6 +24,23 @@ sap.ui.define([
                     default: return "None";
                 }
             }
+        },
+
+        onInit: function () {
+            // Load incidents data explicitly
+            var oModel = this.getOwnerComponent().getModel();
+            var that = this;
+
+            // Read all incidents from backend
+            oModel.read("/ZEHSM_INCIDENT_GPSet", {
+                success: function (oData) {
+                    console.log("Incidents loaded:", oData);
+                    // Data is automatically bound to the view via OData model
+                },
+                error: function (oError) {
+                    console.error("Error loading incidents:", oError);
+                }
+            });
         },
 
         onNavBack: function () {
