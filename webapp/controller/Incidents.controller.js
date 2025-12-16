@@ -28,45 +28,90 @@ sap.ui.define([
         },
 
         onInit: function () {
-            this._loadIncidentsDirectly();
+            this._loadIncidentsAsXML();
         },
 
-        _loadIncidentsDirectly: function () {
+        _loadIncidentsAsXML: function () {
             var that = this;
-            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet";
+            // Add a timestamp to prevent caching
+            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet?ts=" + new Date().getTime();
 
-            // Explicitly fetch using AJAX to bypass OData model key constraints
-            // (Metadata defines EmployeeId as key, but multiple incidents exist per employee)
+            console.log("Fetching XML from:", sUrl);
+
             $.ajax({
                 url: sUrl,
                 method: "GET",
-                dataType: "json",
-                success: function (oData) {
-                    console.log("AJAX Success:", oData);
-                    var aResults = [];
+                headers: {
+                    "Accept": "application/xml, text/xml, */*"
+                },
+                dataType: "xml", // FORCE XML parsing
+                success: function (xmlDoc) {
+                    console.log("XML Response received");
+                    var $xml = $(xmlDoc);
+                    var aIncidents = [];
 
-                    // Handle different OData JSON formats (d.results or just d)
-                    if (oData && oData.d) {
-                        if (oData.d.results) {
-                            aResults = oData.d.results;
-                        } else if (Array.isArray(oData.d)) {
-                            aResults = oData.d;
+                    // Parse Atom/XML feed manually
+                    $xml.find("entry").each(function () {
+                        var $entry = $(this);
+                        var $props = $entry.find("m\\:properties, properties"); // Handle namespaces
+
+                        // Fallback if jQuery namespace selector fails
+                        if ($props.length === 0) $props = $entry.find("content").children().first();
+
+                        var incident = {
+                            IncidentId: that._getNodeValue($props, "d\\:IncidentId, IncidentId"),
+                            IncidentDescription: that._getNodeValue($props, "d\\:IncidentDescription, IncidentDescription"),
+                            IncidentStatus: that._getNodeValue($props, "d\\:IncidentStatus, IncidentStatus"),
+                            IncidentPriority: that._getNodeValue($props, "d\\:IncidentPriority, IncidentPriority"),
+                            IncidentDate: that._getNodeValue($props, "d\\:IncidentDate, IncidentDate"),
+                            Plant: that._getNodeValue($props, "d\\:Plant, Plant")
+                        };
+
+                        // Parse Date if string
+                        if (incident.IncidentDate && typeof incident.IncidentDate === "string") {
+                            // Assuming YYYY-MM-DD format from XML like 2025-08-19T00:00:00
+                            incident.IncidentDate = new Date(incident.IncidentDate);
                         }
-                    }
 
-                    if (aResults.length > 0) {
-                        var oIncidentsModel = new JSONModel(aResults);
+                        aIncidents.push(incident);
+                    });
+
+                    console.log("Parsed " + aIncidents.length + " incidents from XML");
+
+                    if (aIncidents.length > 0) {
+                        var oIncidentsModel = new JSONModel(aIncidents);
                         that.getView().setModel(oIncidentsModel, "incidents");
-                        MessageToast.show("Loaded " + aResults.length + " incidents from Backend");
+                        MessageToast.show("Loaded " + aIncidents.length + " incidents (XML)");
                     } else {
-                        MessageToast.show("Backend returned 0 incidents");
+                        // Fallback: try finding 'd:IncidentId' directly in document
+                        MessageToast.show("XML received but 0 entries found");
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("AJAX Error:", textStatus, errorThrown);
-                    MessageToast.show("Connection Failed: " + textStatus);
+                    console.error("XML Load Error:", textStatus, errorThrown);
+                    MessageToast.show("XML Request Failed: " + errorThrown);
                 }
             });
+        },
+
+        // Helper to handle XML namespaces safely
+        _getNodeValue: function ($parent, selector) {
+            var $node = $parent.find(selector);
+            if ($node.length === 0) {
+                // Try selecting by tag name ignoring namespace
+                var tagName = selector.split(",").pop().trim();
+                $node = $parent.find(tagName);
+                // Also search children directly (for m:properties structure)
+                if ($node.length === 0) {
+                    $parent.children().each(function () {
+                        if (this.nodeName.indexOf(tagName) !== -1 || this.nodeName.endsWith(":" + tagName)) {
+                            $node = $(this);
+                            return false;
+                        }
+                    });
+                }
+            }
+            return $node.text();
         },
 
         onNavBack: function () {
@@ -82,7 +127,7 @@ sap.ui.define([
         },
 
         onIncidentItemPress: function (oEvent) {
-            // Future implementation for Detail View
+            // Future implementation
         }
     });
 });
