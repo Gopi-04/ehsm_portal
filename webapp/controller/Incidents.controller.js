@@ -28,30 +28,28 @@ sap.ui.define([
         },
 
         onInit: function () {
-            // Hardcoded incident data from your backend XML
-            // Since backend doesn't support GET_ENTITYSET, we'll fetch it directly
-            var aIncidents = [
-                {
-                    EmployeeId: "00000001",
-                    IncidentId: "INC000001",
-                    Plant: "AT01",
-                    IncidentDescription: "Chemical leak in storage",
-                    IncidentCategory: "Safety",
-                    IncidentPriority: "High",
-                    IncidentStatus: "Open",
-                    IncidentDate: new Date("2025-08-19"),
-                    IncidentTime: "PT08H33M24S",
-                    CreatedBy: "K901604",
-                    CompletionDate: "0000-00-00",
-                    CompletionTime: "PT00H00M00S"
+            console.log("=== Loading Incidents from Backend ===");
+            var oModel = this.getOwnerComponent().getModel();
+            var that = this;
+
+            // Read all incidents from backend
+            oModel.read("/ZEHSM_INCIDENT_GPSet", {
+                success: function (oData) {
+                    console.log("✓ SUCCESS - Loaded incidents:", oData);
+                    var aIncidents = oData.results || [];
+                    console.log("Number of incidents:", aIncidents.length);
+
+                    // Create JSON model with backend data
+                    var oIncidentsModel = new JSONModel(aIncidents);
+                    that.getView().setModel(oIncidentsModel, "incidents");
+
+                    MessageToast.show("Loaded " + aIncidents.length + " incident(s) from backend");
+                },
+                error: function (oError) {
+                    console.error("✗ ERROR loading incidents:", oError);
+                    MessageToast.show("Error: " + (oError.message || oError.statusCode));
                 }
-            ];
-
-            // Create and set model
-            var oIncidentsModel = new JSONModel(aIncidents);
-            this.getView().setModel(oIncidentsModel, "incidents");
-
-            MessageToast.show("Loaded " + aIncidents.length + " incident(s)");
+            });
         },
 
         onNavBack: function () {
