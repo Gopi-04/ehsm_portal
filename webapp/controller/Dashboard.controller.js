@@ -18,7 +18,7 @@ sap.ui.define([
         _loadDashboardData: function () {
             var oModel = this.getOwnerComponent().getModel();
             var oViewModel = this.getView().getModel();
-            var sEmployeeId = "1001"; // Hardcoded for now, or retrieve from global model
+            var sEmployeeId = "00000001"; // Hardcoded to match valid user data
             var that = this;
 
             // Load Profile

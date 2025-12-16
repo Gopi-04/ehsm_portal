@@ -1,6 +1,6 @@
 [
     {
-        "EmployeeId": "1001",
+        "EmployeeId": "00000001",
         "Plant": "AT01",
         "FirstName": "Kaar",
         "LastName": "Technologies",
@@ -9,12 +9,12 @@
         "CommLanguage": "EN",
         "Nationality": "IN",
         "City": "ARE",
-        "Street": "Main St",
+        "Street": "",
         "Country": "AT",
         "PostalCode": "9999",
         "Company": "AT01",
         "EmployeeStatus": "3",
-        "Title": "Mr",
+        "Title": "",
         "StartDate": "/Date(1704067200000)/"
     }
 ]
