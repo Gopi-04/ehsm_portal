@@ -39,7 +39,9 @@ sap.ui.define([
                         if (oData.Status === "Success" || oData.Status === "Active") {
                             MessageToast.show("Login Successful");
                             var oRouter = sap.ui.core.UIComponent.getRouterFor(that);
-                            oRouter.navTo("Dashboard");
+                            oRouter.navTo("Dashboard", {
+                                employeeId: sUserId
+                            });
                         } else {
                             // Check if status is failure or something else provided by backend
                             MessageToast.show("Login Failed. Status: " + oData.Status);

@@ -98,21 +98,21 @@
         },
         {
           "name": "Dashboard",
-          "pattern": "dashboard",
+          "pattern": "dashboard/{employeeId}",
           "target": [
             "Dashboard"
           ]
         },
         {
           "name": "Incidents",
-          "pattern": "incidents",
+          "pattern": "incidents/{employeeId}",
           "target": [
             "Incidents"
           ]
         },
         {
           "name": "Risks",
-          "pattern": "risks",
+          "pattern": "risks/{employeeId}",
           "target": [
             "Risks"
           ]

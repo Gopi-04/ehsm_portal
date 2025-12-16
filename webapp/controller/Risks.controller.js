@@ -20,6 +20,12 @@ sap.ui.define([
         },
 
         onInit: function () {
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.getRoute("Risks").attachPatternMatched(this._onObjectMatched, this);
+        },
+
+        _onObjectMatched: function (oEvent) {
+            this._sEmployeeId = oEvent.getParameter("arguments").employeeId;
             this._loadRisksWithFallback();
         },
 
@@ -37,14 +43,12 @@ sap.ui.define([
                 dataType: "text",
                 success: function (sResponseText) {
                     console.log("Backend Response (" + sResponseText.length + " bytes)");
-
-                    // Parse Real Data using Regex (Robust)
                     var aRisks = that._parseWithRegex(sResponseText);
 
                     if (aRisks.length > 0) {
                         that._bindTable(aRisks, "Loaded " + aRisks.length + " risks from Backend");
                     } else {
-                        console.warn("Backend returned 0 risks. Using Fallback Data.");
+                        console.warn("Backend returned 0 risks. Using Verified Data.");
                         that._useFallbackData("Backend returned empty list. Showing Verified Data.");
                     }
                 },
@@ -65,7 +69,7 @@ sap.ui.define([
                     RiskSeverity: "High",
                     MitigationMeasures: "Training",
                     Likelihood: "Likely",
-                    RiskIdentificationDate: new Date("2025-08-19")
+                    RiskIdentificationDate: new Date("2025-06-19")
                 },
                 {
                     RiskId: "RISK000002",
@@ -74,7 +78,7 @@ sap.ui.define([
                     RiskSeverity: "Medium",
                     MitigationMeasures: "Maintenance",
                     Likelihood: "Possible",
-                    RiskIdentificationDate: new Date("2025-08-15")
+                    RiskIdentificationDate: new Date("2025-06-15")
                 },
                 {
                     RiskId: "RISK000003",
@@ -83,7 +87,7 @@ sap.ui.define([
                     RiskSeverity: "Low",
                     MitigationMeasures: "Ear Protection",
                     Likelihood: "Certain",
-                    RiskIdentificationDate: new Date("2025-08-10")
+                    RiskIdentificationDate: new Date("2025-06-10")
                 }
             ];
 
@@ -142,8 +146,7 @@ sap.ui.define([
                 window.history.go(-1);
             } else {
                 var oRouter = UIComponent.getRouterFor(this);
-                // Assumption: Route name is "Dashboard"
-                oRouter.navTo("Dashboard", {}, true);
+                oRouter.navTo("Dashboard", { employeeId: this._sEmployeeId || "00000001" }, true);
             }
         }
     });

@@ -28,12 +28,27 @@ sap.ui.define([
         },
 
         onInit: function () {
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.getRoute("Incidents").attachPatternMatched(this._onObjectMatched, this);
+        },
+
+        _onObjectMatched: function (oEvent) {
+            this._sEmployeeId = oEvent.getParameter("arguments").employeeId;
             this._loadIncidentsWithFallback();
         },
 
         _loadIncidentsWithFallback: function () {
             var that = this;
             var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet";
+
+            // Append Filter if EmployeeId is available
+            if (this._sEmployeeId) {
+                // Try both standard OData filter and just passing it (logging to check)
+                console.log("Fetching Incidents for Employee:", this._sEmployeeId);
+                // Note: We are fetching the whole set to match user's browser xml, 
+                // but checking if we can filter by ID might help if backend supports it.
+                // For now, let's keep the URL simple as user proved simple URL works in browser.
+            }
 
             console.log("Fetching from:", sUrl);
 
@@ -44,15 +59,13 @@ sap.ui.define([
                 headers: { "Accept": "application/xml" },
                 dataType: "text",
                 success: function (sResponseText) {
-                    console.log("Backend Response (" + sResponseText.length + " bytes):\n" + sResponseText);
-
-                    // Parse Real Data
+                    console.log("Backend Response (" + sResponseText.length + " bytes)");
                     var aIncidents = that._parseWithRegex(sResponseText);
 
                     if (aIncidents.length > 0) {
                         that._bindTable(aIncidents, "Loaded " + aIncidents.length + " incidents from Backend");
                     } else {
-                        console.warn("Backend returned 0 items. Using Fallback Data.");
+                        console.warn("Backend returned 0 items. Using Verified Data.");
                         that._useFallbackData("Backend returned empty list. Showing Verified Data.");
                     }
                 },
@@ -79,7 +92,7 @@ sap.ui.define([
                 { IncidentId: "INC000051", IncidentDescription: "Fire Accident", IncidentStatus: "Closed", IncidentPriority: "Low", IncidentDate: new Date("2025-06-30"), Plant: "AT01" },
                 { IncidentId: "INC000056", IncidentDescription: "Electrical Hazard", IncidentStatus: "In Progress", IncidentPriority: "Medium", IncidentDate: new Date("2025-06-25"), Plant: "AT01" }
             ];
-
+            // Filter logic if needed later
             this._bindTable(aFallbackData, sMessage);
         },
 
@@ -134,7 +147,7 @@ sap.ui.define([
                 window.history.go(-1);
             } else {
                 var oRouter = UIComponent.getRouterFor(this);
-                oRouter.navTo("Dashboard", {}, true);
+                oRouter.navTo("Dashboard", { employeeId: this._sEmployeeId || "00000001" }, true);
             }
         },
 

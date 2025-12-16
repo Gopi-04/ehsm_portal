@@ -12,14 +12,23 @@ sap.ui.define([
                 RiskCount: 0
             });
             this.getView().setModel(oViewModel);
-            this._loadDashboardData();
+
+            // Attach route matcher to handle the argument
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.getRoute("Dashboard").attachPatternMatched(this._onObjectMatched, this);
         },
 
-        _loadDashboardData: function () {
+        _onObjectMatched: function (oEvent) {
+            var sEmployeeId = oEvent.getParameter("arguments").employeeId;
+            this._sEmployeeId = sEmployeeId; // Store for navigation
+            this._loadDashboardData(sEmployeeId);
+        },
+
+        _loadDashboardData: function (sEmployeeId) {
             var oModel = this.getOwnerComponent().getModel();
-            var oViewModel = this.getView().getModel();
-            var sEmployeeId = "00000001"; // Hardcoded to match valid user data
             var that = this;
+
+            console.log("Loading Dashboard for Employee:", sEmployeeId);
 
             // Load Profile
             var sProfilePath = oModel.createKey("/ZEHSM_PROFILE_GPSet", {
@@ -37,47 +46,52 @@ sap.ui.define([
             });
 
             // Count Incidents (Mock logic: just reading all and counting)
-            // In real OData we might use $count or $inlinecount
-            oModel.read("/ZEHSM_INCIDENT_GPSet", {
-                success: function (oData) {
-                    var iCount = oData.results ? oData.results.length : 0;
-                    oViewModel.setProperty("/IncidentCount", iCount);
-                },
-                error: function (oError) {
-                    console.error("Error reading Incidents", oError);
+            // Ideally should filter by EmployeeId if supported
+            var sUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_INCIDENT_GPSet";
+            $.ajax({
+                url: sUrl,
+                method: "GET",
+                headers: { "Accept": "application/xml" },
+                dataType: "text",
+                success: function (sText) {
+                    // Simple regex count
+                    var count = (sText.match(/<entry>/g) || []).length;
+                    if (count === 0) count = (sText.match(/<atom:entry>/g) || []).length;
+                    that.getView().getModel().setProperty("/IncidentCount", count);
                 }
             });
 
             // Count Risks
-            oModel.read("/ZEHSM_RISK_GPSet", {
-                success: function (oData) {
-                    var iCount = oData.results ? oData.results.length : 0;
-                    oViewModel.setProperty("/RiskCount", iCount);
-                },
-                error: function (oError) {
-                    console.error("Error reading Risks", oError);
+            var sRiskUrl = "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/ZEHSM_RISK_GPSet";
+            $.ajax({
+                url: sRiskUrl,
+                method: "GET",
+                headers: { "Accept": "application/xml" },
+                dataType: "text",
+                success: function (sText) {
+                    var count = (sText.match(/<entry>/g) || []).length;
+                    if (count === 0) count = (sText.match(/<atom:entry>/g) || []).length;
+                    that.getView().getModel().setProperty("/RiskCount", count);
                 }
             });
         },
 
         onIncidentPress: function () {
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            sap.m.MessageToast.show("Navigating to Incidents...");
-            oRouter.navTo("Incidents");
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.navTo("Incidents", {
+                employeeId: this._sEmployeeId || "00000001"
+            });
         },
 
         onRiskPress: function () {
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            oRouter.navTo("Risks");
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.navTo("Risks", {
+                employeeId: this._sEmployeeId || "00000001"
+            });
         },
 
         onLogout: function () {
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            oRouter.navTo("Login");
-        },
-
-        onNavBack: function () {
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            var oRouter = UIComponent.getRouterFor(this);
             oRouter.navTo("Login");
         }
     });
