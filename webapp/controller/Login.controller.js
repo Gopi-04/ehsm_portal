@@ -26,29 +26,36 @@ sap.ui.define([
             var oModel = this.getOwnerComponent().getModel();
             var that = this;
 
-            // Using ZEHSM_LOGIN_GPSet as per metadata
-            oModel.read("/ZEHSM_LOGIN_GPSet", {
-                filters: [
-                    new Filter("EmployeeId", FilterOperator.EQ, sUserId)
-                ],
+            // Using Key-based read as Filter-based (GET_ENTITYSET) is not implemented in backend (501 error)
+            var sPath = oModel.createKey("/ZEHSM_LOGIN_GPSet", {
+                EmployeeId: sUserId,
+                Password: sPassword
+            });
+
+            oModel.read(sPath, {
                 success: function (oData) {
-                    var aUsers = oData.results;
-                    if (aUsers && aUsers.length > 0) {
-                        var oUser = aUsers[0];
-                        if (oUser.Password === sPassword) {
+                    // oData will be the single entity object
+                    if (oData && oData.EmployeeId) {
+                        if (oData.Status === "Success" || oData.Status === "Active") {
                             MessageToast.show("Login Successful");
-                            // Navigate to Dashboard
                             var oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                             oRouter.navTo("Dashboard");
                         } else {
-                            MessageToast.show("Invalid Password");
+                            // Check if status is failure or something else provided by backend
+                            MessageToast.show("Login Failed. Status: " + oData.Status);
                         }
                     } else {
                         MessageToast.show("User not found");
                     }
                 },
                 error: function (oError) {
-                    MessageToast.show("Login Error: " + oError.message);
+                    // 404 means entity not found (invalid credentials in this context)
+                    try {
+                        var oErrorResponse = JSON.parse(oError.responseText);
+                        MessageToast.show("Login Error: " + (oErrorResponse.error.message.value || oError.message));
+                    } catch (e) {
+                        MessageToast.show("Invalid Credentials or Login Error");
+                    }
                 }
             });
         }
