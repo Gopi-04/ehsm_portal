@@ -8,6 +8,22 @@
              <Button icon="sap-icon://log" text="Logout" press=".onLogout"/>
         </headerContent>
         <content>
+            <ObjectHeader
+                icon="sap-icon://employee"
+                title="{profile>/FirstName} {profile>/LastName}"
+                number="{profile>/EmployeeId}"
+                numberUnit="Employee ID"
+                intro="{profile>/Title}"
+                class="sapUiResponsivePadding--header">
+                <statuses>
+                    <ObjectStatus text="{profile>/Plant}" state="Information" icon="sap-icon://factory" title="Plant"/>
+                </statuses>
+                <attributes>
+                    <ObjectAttribute title="Email" text="{profile>/EmailId}"/>
+                    <ObjectAttribute title="City" text="{profile>/City}, {profile>/Country}"/>
+                    <ObjectAttribute title="Communication Lang" text="{profile>/CommLanguage}"/>
+                </attributes>
+            </ObjectHeader>
             <l:Grid defaultSpan="L6 M6 S12" class="sapUiSmallMarginTop">
                 <GenericTile class="sapUiTinyMarginBegin sapUiTinyMarginTop tileLayout" header="Incident Management" subheader="Manage Incidents" press=".onIncidentPress">
                     <TileContent unit="Open">

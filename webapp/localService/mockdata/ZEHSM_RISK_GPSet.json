@@ -1,26 +1,14 @@
 [
     {
         "EmployeeId": "1001",
-        "RiskId": "RSK001",
-        "Plant": "1001",
-        "RiskDescription": "High Noise Level",
-        "RiskCategory": "Health",
-        "RiskSeverity": "Medium",
-        "MitigationMeasures": "Ear Protection",
-        "Likelihood": "High",
-        "CreatedBy": "User1",
-        "RiskIdentificationDate": "/Date(1702771200000)/"
-    },
-    {
-        "EmployeeId": "1001",
-        "RiskId": "RSK002",
-        "Plant": "1001",
-        "RiskDescription": "Slippery Floor",
+        "RiskId": "RISK000001",
+        "Plant": "AT01",
+        "RiskDescription": "Exposure to chemical",
         "RiskCategory": "Safety",
-        "RiskSeverity": "Low",
-        "MitigationMeasures": "Signage",
-        "Likelihood": "Low",
-        "CreatedBy": "User2",
-        "RiskIdentificationDate": "/Date(1702684800000)/"
+        "RiskSeverity": "High",
+        "MitigationMeasures": "Training",
+        "Likelihood": "Likely",
+        "CreatedBy": "K901604",
+        "RiskIdentificationDate": "/Date(1755561600000)/"
     }
 ]

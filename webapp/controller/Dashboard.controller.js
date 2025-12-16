@@ -18,6 +18,23 @@ sap.ui.define([
         _loadDashboardData: function () {
             var oModel = this.getOwnerComponent().getModel();
             var oViewModel = this.getView().getModel();
+            var sEmployeeId = "1001"; // Hardcoded for now, or retrieve from global model
+            var that = this;
+
+            // Load Profile
+            var sProfilePath = oModel.createKey("/ZEHSM_PROFILE_GPSet", {
+                EmployeeId: sEmployeeId
+            });
+
+            oModel.read(sProfilePath, {
+                success: function (oData) {
+                    var oProfileModel = new JSONModel(oData);
+                    that.getView().setModel(oProfileModel, "profile");
+                },
+                error: function (oError) {
+                    console.error("Error reading Profile", oError);
+                }
+            });
 
             // Count Incidents (Mock logic: just reading all and counting)
             // In real OData we might use $count or $inlinecount

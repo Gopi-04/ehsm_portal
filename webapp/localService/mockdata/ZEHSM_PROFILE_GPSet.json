@@ -1,0 +1,20 @@
+[
+    {
+        "EmployeeId": "1001",
+        "Plant": "AT01",
+        "FirstName": "Kaar",
+        "LastName": "Technologies",
+        "Gender": "1",
+        "EmailId": "ABC@GMAIL.COM",
+        "CommLanguage": "EN",
+        "Nationality": "IN",
+        "City": "ARE",
+        "Street": "Main St",
+        "Country": "AT",
+        "PostalCode": "9999",
+        "Company": "AT01",
+        "EmployeeStatus": "3",
+        "Title": "Mr",
+        "StartDate": "/Date(1704067200000)/"
+    }
+]
