@@ -38,5 +38,5 @@ server:
           - urlPath: /sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV
             metadataPath: ./webapp/localService/mainService/metadata.xml
             mockdataPath: ./webapp/localService/mockdata
-            generateMockData: true
+            generateMockData: false
         annotations: []
