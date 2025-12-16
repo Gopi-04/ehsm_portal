@@ -32,11 +32,11 @@
                 <items>
                     <ColumnListItem type="Navigation" press=".onIncidentItemPress">
                         <cells>
-                            <ObjectIdentifier title="{IncidentId}"/>
-                            <Text text="{IncidentDescription}" />
-                            <ObjectStatus text="{IncidentStatus}" state="{path: 'IncidentStatus', formatter: '.formatter.statusState'}" />
-                            <ObjectStatus text="{IncidentPriority}" state="{path: 'IncidentPriority', formatter: '.formatter.priorityState'}" />
-                            <Text text="{path: 'IncidentDate', type: 'sap.ui.model.type.Date', formatOptions: { style: 'medium' }}" />
+                            <ObjectIdentifier title="{incidents>IncidentId}"/>
+                            <Text text="{incidents>IncidentDescription}" />
+                            <ObjectStatus text="{incidents>IncidentStatus}" state="{path: 'incidents>IncidentStatus', formatter: '.formatter.statusState'}" />
+                            <ObjectStatus text="{incidents>IncidentPriority}" state="{path: 'incidents>IncidentPriority', formatter: '.formatter.priorityState'}" />
+                            <Text text="{path: 'incidents>IncidentDate', type: 'sap.ui.model.type.Date', formatOptions: { style: 'medium' }}" />
                         </cells>
                     </ColumnListItem>
                 </items>
