@@ -43,91 +43,120 @@ sap.ui.define([
                 headers: {
                     "Accept": "application/xml"
                 },
-                dataType: "xml",
-                success: function (xmlDoc) {
-                    console.log("XML Response received");
+                dataType: "text", // FETCH AS TEXT TO ENABLE REGEX FALLBACK
+                success: function (sResponseText) {
+                    console.log("Response text received (" + sResponseText.length + " bytes)");
                     var aIncidents = [];
 
-                    // Native DOM Parsing to avoid jQuery Namespace issues
-                    var entries = xmlDoc.getElementsByTagName("entry");
-                    // If no entries found directly, try namespaced version (browsers vary)
-                    if (entries.length === 0) entries = xmlDoc.getElementsByTagName("atom:entry");
-
-                    console.log("Found entry elements:", entries.length);
-
-                    for (var i = 0; i < entries.length; i++) {
-                        var entry = entries[i];
-
-                        // Find properties container (m:properties)
-                        var properties = entry.getElementsByTagName("m:properties")[0];
-                        if (!properties) properties = entry.getElementsByTagName("properties")[0]; // Fallback
-
-                        // If still not found, search all children for localName 'properties'
-                        if (!properties) {
-                            var children = entry.getElementsByTagName("content")[0].children;
-                            for (var j = 0; j < children.length; j++) {
-                                if (children[j].localName === "properties") {
-                                    properties = children[j];
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (properties) {
-                            var incident = {
-                                IncidentId: that._getTagValue(properties, "d:IncidentId") || that._getTagValue(properties, "IncidentId"),
-                                IncidentDescription: that._getTagValue(properties, "d:IncidentDescription") || that._getTagValue(properties, "IncidentDescription"),
-                                IncidentStatus: that._getTagValue(properties, "d:IncidentStatus") || that._getTagValue(properties, "IncidentStatus"),
-                                IncidentPriority: that._getTagValue(properties, "d:IncidentPriority") || that._getTagValue(properties, "IncidentPriority"),
-                                IncidentDate: that._getTagValue(properties, "d:IncidentDate") || that._getTagValue(properties, "IncidentDate"),
-                                Plant: that._getTagValue(properties, "d:Plant") || that._getTagValue(properties, "Plant")
-                            };
-
-                            // Parse Date if needed
-                            if (incident.IncidentDate) {
-                                incident.IncidentDate = new Date(incident.IncidentDate);
-                            }
-
-                            aIncidents.push(incident);
-                        }
+                    // STRATEGY 1: DOM Parser
+                    try {
+                        var parser = new DOMParser();
+                        var xmlDoc = parser.parseFromString(sResponseText, "text/xml");
+                        aIncidents = that._parseWithDOM(xmlDoc);
+                        console.log("DOM Parser found " + aIncidents.length + " incidents");
+                    } catch (e) {
+                        console.error("DOM Parsing failed:", e);
                     }
 
-                    console.log("Parsed " + aIncidents.length + " incidents from XML");
+                    // STRATEGY 2: Regex Fallback (if DOM failed)
+                    if (aIncidents.length === 0) {
+                        console.log("Falling back to Regex parsing...");
+                        aIncidents = that._parseWithRegex(sResponseText);
+                        console.log("Regex Parser found " + aIncidents.length + " incidents");
+                    }
 
                     if (aIncidents.length > 0) {
                         var oIncidentsModel = new JSONModel(aIncidents);
                         that.getView().setModel(oIncidentsModel, "incidents");
                         MessageToast.show("Loaded " + aIncidents.length + " incidents");
                     } else {
-                        MessageToast.show("XML parsed but 0 incidents extracted");
+                        MessageToast.show("No data found in response");
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("XML Load Error:", textStatus, errorThrown);
+                    console.error("Load Error:", textStatus, errorThrown);
                     MessageToast.show("Request Failed: " + errorThrown);
                 }
             });
         },
 
-        _getTagValue: function (parent, tagName) {
-            // Try standard getElementsByTagName
-            var elements = parent.getElementsByTagName(tagName);
+        _parseWithDOM: function (xmlDoc) {
+            var aIncidents = [];
+            var entries = xmlDoc.getElementsByTagName("entry");
+            if (entries.length === 0) entries = xmlDoc.getElementsByTagName("atom:entry");
 
-            // If failed, try ignoring namespace prefix (localName check)
-            if (elements.length === 0 && tagName.indexOf(":") > -1) {
-                var localName = tagName.split(":")[1];
-                var allChildren = parent.children || parent.childNodes;
-                for (var k = 0; k < allChildren.length; k++) {
-                    var node = allChildren[k];
-                    // Check localName or nodeName
-                    if ((node.localName === localName) || (node.nodeName && node.nodeName.endsWith(":" + localName))) {
-                        return node.textContent || node.text;
-                    }
+            for (var i = 0; i < entries.length; i++) {
+                var entry = entries[i];
+                var incident = {
+                    IncidentId: this._findValue(entry, "IncidentId"),
+                    IncidentDescription: this._findValue(entry, "IncidentDescription"),
+                    IncidentStatus: this._findValue(entry, "IncidentStatus"),
+                    IncidentPriority: this._findValue(entry, "IncidentPriority"),
+                    IncidentDate: this._findValue(entry, "IncidentDate"),
+                    Plant: this._findValue(entry, "Plant")
+                };
+
+                if (incident.IncidentId) {
+                    if (incident.IncidentDate) incident.IncidentDate = new Date(incident.IncidentDate);
+                    aIncidents.push(incident);
                 }
             }
+            return aIncidents;
+        },
 
-            if (elements.length > 0) {
-                return elements[0].textContent || elements[0].text;
+        _parseWithRegex: function (sText) {
+            var aIncidents = [];
+            // Split by <entry> or <atom:entry>
+            var aParts = sText.split(/<\/?(?:atom:)?entry>/);
+
+            for (var i = 0; i < aParts.length; i++) {
+                var sPart = aParts[i];
+                // Check if this part contains properties
+                if (sPart.indexOf("IncidentId") === -1) continue;
+
+                var incident = {
+                    IncidentId: this._extractTag(sPart, "IncidentId"),
+                    IncidentDescription: this._extractTag(sPart, "IncidentDescription"),
+                    IncidentStatus: this._extractTag(sPart, "IncidentStatus"),
+                    IncidentPriority: this._extractTag(sPart, "IncidentPriority"),
+                    IncidentDate: this._extractTag(sPart, "IncidentDate"),
+                    Plant: this._extractTag(sPart, "Plant")
+                };
+
+                if (incident.IncidentId) {
+                    if (incident.IncidentDate) incident.IncidentDate = new Date(incident.IncidentDate);
+                    aIncidents.push(incident);
+                }
+            }
+            return aIncidents;
+        },
+
+        _extractTag: function (sText, sTagName) {
+            // Regex to find <d:TagName>Value</d:TagName> or <TagName>Value</TagName>
+            // Handles potential namespaces like d: or m:
+            var regex = new RegExp("<(?:\\w+:)" + sTagName + "[^>]*>(.*?)<\\/(?:\\w+:)" + sTagName + ">", "i");
+            var match = sText.match(regex);
+            if (match && match[1]) return match[1];
+
+            // Try without namespace
+            var regex2 = new RegExp("<" + sTagName + "[^>]*>(.*?)<\\/" + sTagName + ">", "i");
+            var match2 = sText.match(regex2);
+            if (match2 && match2[1]) return match2[1];
+
+            return "";
+        },
+
+        _findValue: function (node, targetLocalName) {
+            if (!node) return "";
+            var nodeName = node.localName || node.nodeName;
+            if (nodeName.indexOf(":") > -1) nodeName = nodeName.split(":")[1];
+
+            if (nodeName === targetLocalName) return node.textContent || node.text || "";
+
+            var children = node.children || node.childNodes;
+            for (var i = 0; i < children.length; i++) {
+                var found = this._findValue(children[i], targetLocalName);
+                if (found) return found;
             }
             return "";
         },
