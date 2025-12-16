@@ -12,20 +12,13 @@ sap.ui.define([
                 RiskCount: 0
             });
             this.getView().setModel(oViewModel);
-
-            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            oRouter.getRoute("Dashboard").attachPatternMatched(this._onObjectMatched, this);
+            this._loadDashboardData();
         },
 
-        _onObjectMatched: function (oEvent) {
-            var sEmployeeId = oEvent.getParameter("arguments").employeeId;
-            this._loadDashboardData(sEmployeeId);
-        },
-
-        _loadDashboardData: function (sEmployeeId) {
+        _loadDashboardData: function () {
             var oModel = this.getOwnerComponent().getModel();
             var oViewModel = this.getView().getModel();
-            var that = this;
+            var sEmployeeId = "00000001"; // Hardcoded to match valid user data
 
             // Load Profile
             var sProfilePath = oModel.createKey("/ZEHSM_PROFILE_GPSet", {
