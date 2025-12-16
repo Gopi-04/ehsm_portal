@@ -29,28 +29,29 @@ sap.ui.define([
         onInit: function () {
             console.log("=== Incidents Controller Initialized ===");
             var oModel = this.getOwnerComponent().getModel();
-            console.log("OData Model:", oModel);
-            console.log("Service URL:", oModel.sServiceUrl);
-
+            var sEmployeeId = "00000001"; // Hardcoded for now
             var that = this;
 
-            // Try to read incidents
-            console.log("Attempting to read /ZEHSM_INCIDENT_GPSet...");
-            oModel.read("/ZEHSM_INCIDENT_GPSet", {
+            // Since EmployeeId is the key, we need to read the specific entity
+            var sPath = "/ZEHSM_INCIDENT_GPSet('" + sEmployeeId + "')";
+            console.log("Reading incident for path:", sPath);
+
+            oModel.read(sPath, {
                 success: function (oData) {
-                    console.log("✓ SUCCESS - Incidents loaded:", oData);
-                    console.log("Number of incidents:", oData.results ? oData.results.length : 0);
-                    if (oData.results && oData.results.length > 0) {
-                        MessageToast.show("Loaded " + oData.results.length + " incident(s)");
-                    } else {
-                        MessageToast.show("No incidents found in backend");
-                    }
+                    console.log("✓ SUCCESS - Incident data:", oData);
+                    MessageToast.show("Incident loaded: " + oData.IncidentId);
+
+                    // Bind the single incident to the table
+                    var oTable = that.getView().byId("incidentsTable");
+                    oTable.bindItems({
+                        path: "/",
+                        template: oTable.getBindingInfo("items").template,
+                        model: new sap.ui.model.json.JSONModel([oData])
+                    });
                 },
                 error: function (oError) {
-                    console.error("✗ ERROR loading incidents:", oError);
-                    console.error("Status Code:", oError.statusCode);
-                    console.error("Response:", oError.responseText);
-                    MessageToast.show("Error loading incidents: " + (oError.message || oError.statusCode));
+                    console.error("✗ ERROR:", oError);
+                    MessageToast.show("Error: " + (oError.message || oError.statusCode));
                 }
             });
         },
