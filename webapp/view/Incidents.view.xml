@@ -6,7 +6,7 @@
     displayBlock="true">
     <Page id="incidentsPage" title="Incident Management" showNavButton="true" navButtonPress=".onNavBack">
         <content>
-             <Table id="incidentsTable" items="{path: '/ZEHSM_INCIDENT_GPSet', filters: [{path: 'EmployeeId', operator: 'EQ', value1: '00000001'}]}" width="auto" class="sapUiResponsiveMargin">
+             <Table id="incidentsTable" items="{/ZEHSM_INCIDENT_GPSet}" width="auto" class="sapUiResponsiveMargin">
                 <headerToolbar>
                     <Toolbar>
                         <Title text="Incidents History"/>
