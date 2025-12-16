@@ -98,9 +98,16 @@
         },
         {
           "name": "Dashboard",
-          "pattern": "dashboard",
+          "pattern": "dashboard/{employeeId}",
           "target": [
             "Dashboard"
+          ]
+        },
+        {
+          "name": "Incidents",
+          "pattern": "incidents",
+          "target": [
+            "Incidents"
           ]
         }
       ],
@@ -112,6 +119,10 @@
         "Dashboard": {
           "id": "Dashboard",
           "name": "Dashboard"
+        },
+        "Incidents": {
+          "id": "Incidents",
+          "name": "Incidents"
         }
       }
     },

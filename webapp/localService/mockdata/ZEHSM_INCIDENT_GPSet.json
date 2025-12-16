@@ -1,6 +1,6 @@
 [
     {
-        "EmployeeId": "1001",
+        "EmployeeId": "00000001",
         "IncidentId": "INC000001",
         "Plant": "AT01",
         "IncidentDescription": "Chemical leak in storage",
@@ -14,7 +14,7 @@
         "CompletionTime": "PT00H00M00S"
     },
     {
-        "EmployeeId": "1001",
+        "EmployeeId": "00000001",
         "IncidentId": "INC000002",
         "Plant": "AT01",
         "IncidentDescription": "Slips and trips",

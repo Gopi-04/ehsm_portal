@@ -12,13 +12,19 @@ sap.ui.define([
                 RiskCount: 0
             });
             this.getView().setModel(oViewModel);
-            this._loadDashboardData();
+
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.getRoute("Dashboard").attachPatternMatched(this._onObjectMatched, this);
         },
 
-        _loadDashboardData: function () {
+        _onObjectMatched: function (oEvent) {
+            var sEmployeeId = oEvent.getParameter("arguments").employeeId;
+            this._loadDashboardData(sEmployeeId);
+        },
+
+        _loadDashboardData: function (sEmployeeId) {
             var oModel = this.getOwnerComponent().getModel();
             var oViewModel = this.getView().getModel();
-            var sEmployeeId = "00000001"; // Hardcoded to match valid user data
             var that = this;
 
             // Load Profile
@@ -62,7 +68,7 @@ sap.ui.define([
 
         onIncidentPress: function () {
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            // oRouter.navTo("Incidents"); // We will create this route next
+            oRouter.navTo("Incidents");
         },
 
         onRiskPress: function () {
