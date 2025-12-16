@@ -1,0 +1,44 @@
+[
+    {
+        "EmployeeId": "1001",
+        "IncidentId": "INC001",
+        "Plant": "1001",
+        "IncidentDescription": "Chemical Spill",
+        "IncidentCategory": "Environment",
+        "IncidentPriority": "High",
+        "IncidentStatus": "Open",
+        "IncidentDate": "/Date(1702771200000)/",
+        "IncidentTime": "PT11H30M00S",
+        "CreatedBy": "User1",
+        "CompletionDate": "",
+        "CompletionTime": "PT00H00M00S"
+    },
+    {
+        "EmployeeId": "1001",
+        "IncidentId": "INC002",
+        "Plant": "1001",
+        "IncidentDescription": "Machinery Malfunction",
+        "IncidentCategory": "Safety",
+        "IncidentPriority": "Medium",
+        "IncidentStatus": "In Progress",
+        "IncidentDate": "/Date(1702684800000)/",
+        "IncidentTime": "PT09H15M00S",
+        "CreatedBy": "User2",
+        "CompletionDate": "",
+        "CompletionTime": "PT00H00M00S"
+    },
+    {
+        "EmployeeId": "1001",
+        "IncidentId": "INC003",
+        "Plant": "1001",
+        "IncidentDescription": "Minor Injury",
+        "IncidentCategory": "Health",
+        "IncidentPriority": "Low",
+        "IncidentStatus": "Closed",
+        "IncidentDate": "/Date(1702598400000)/",
+        "IncidentTime": "PT14H00M00S",
+        "CreatedBy": "User1",
+        "CompletionDate": "/Date(1702684800000)/",
+        "CompletionTime": "PT10H00M00S"
+    }
+]

@@ -1,0 +1,25 @@
+<mvc:View controllerName="com.kaar.ehsm.controller.Dashboard"
+    xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core">
+    <Page id="dashboardPage" title="{i18n>appTitle}" showNavButton="true" navButtonPress=".onNavBack">
+        <headerContent>
+             <Button icon="sap-icon://log" text="Logout" press=".onLogout"/>
+        </headerContent>
+        <content>
+            <l:Grid defaultSpan="L6 M6 S12" class="sapUiSmallMarginTop">
+                <GenericTile class="sapUiTinyMarginBegin sapUiTinyMarginTop tileLayout" header="Incident Management" subheader="Manage Incidents" press=".onIncidentPress">
+                    <TileContent unit="Open">
+                        <NumericContent value="{/IncidentCount}" icon="sap-icon://alert" valueColor="Error"/>
+                    </TileContent>
+                </GenericTile>
+                <GenericTile class="sapUiTinyMarginBegin sapUiTinyMarginTop tileLayout" header="Risk Assessment" subheader="Manage Risks" press=".onRiskPress">
+                    <TileContent unit="Idenitifed">
+                         <NumericContent value="{/RiskCount}" icon="sap-icon://activity-items" valueColor="Critical"/>
+                    </TileContent>
+                </GenericTile>
+            </l:Grid>
+        </content>
+    </Page>
+</mvc:View>
