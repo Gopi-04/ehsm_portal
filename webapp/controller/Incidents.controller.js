@@ -2,8 +2,8 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/UIComponent",
     "sap/ui/core/routing/History",
-    "sap/ui/model/json/JSONModel"
-], function (Controller, UIComponent, History, JSONModel) {
+    "sap/m/MessageToast"
+], function (Controller, UIComponent, History, MessageToast) {
     "use strict";
 
     return Controller.extend("com.kaar.ehsm.controller.Incidents", {
@@ -27,18 +27,30 @@ sap.ui.define([
         },
 
         onInit: function () {
-            // Load incidents data explicitly
+            console.log("=== Incidents Controller Initialized ===");
             var oModel = this.getOwnerComponent().getModel();
+            console.log("OData Model:", oModel);
+            console.log("Service URL:", oModel.sServiceUrl);
+
             var that = this;
 
-            // Read all incidents from backend
+            // Try to read incidents
+            console.log("Attempting to read /ZEHSM_INCIDENT_GPSet...");
             oModel.read("/ZEHSM_INCIDENT_GPSet", {
                 success: function (oData) {
-                    console.log("Incidents loaded:", oData);
-                    // Data is automatically bound to the view via OData model
+                    console.log("✓ SUCCESS - Incidents loaded:", oData);
+                    console.log("Number of incidents:", oData.results ? oData.results.length : 0);
+                    if (oData.results && oData.results.length > 0) {
+                        MessageToast.show("Loaded " + oData.results.length + " incident(s)");
+                    } else {
+                        MessageToast.show("No incidents found in backend");
+                    }
                 },
                 error: function (oError) {
-                    console.error("Error loading incidents:", oError);
+                    console.error("✗ ERROR loading incidents:", oError);
+                    console.error("Status Code:", oError.statusCode);
+                    console.error("Response:", oError.responseText);
+                    MessageToast.show("Error loading incidents: " + (oError.message || oError.statusCode));
                 }
             });
         },
