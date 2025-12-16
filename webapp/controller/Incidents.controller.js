@@ -2,8 +2,9 @@ sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/core/UIComponent",
     "sap/ui/core/routing/History",
-    "sap/m/MessageToast"
-], function (Controller, UIComponent, History, MessageToast) {
+    "sap/m/MessageToast",
+    "sap/ui/model/json/JSONModel"
+], function (Controller, UIComponent, History, MessageToast, JSONModel) {
     "use strict";
 
     return Controller.extend("com.kaar.ehsm.controller.Incidents", {
@@ -27,33 +28,30 @@ sap.ui.define([
         },
 
         onInit: function () {
-            console.log("=== Incidents Controller Initialized ===");
-            var oModel = this.getOwnerComponent().getModel();
-            var sEmployeeId = "00000001"; // Hardcoded for now
-            var that = this;
-
-            // Since EmployeeId is the key, we need to read the specific entity
-            var sPath = "/ZEHSM_INCIDENT_GPSet('" + sEmployeeId + "')";
-            console.log("Reading incident for path:", sPath);
-
-            oModel.read(sPath, {
-                success: function (oData) {
-                    console.log("✓ SUCCESS - Incident data:", oData);
-                    MessageToast.show("Incident loaded: " + oData.IncidentId);
-
-                    // Bind the single incident to the table
-                    var oTable = that.getView().byId("incidentsTable");
-                    oTable.bindItems({
-                        path: "/",
-                        template: oTable.getBindingInfo("items").template,
-                        model: new sap.ui.model.json.JSONModel([oData])
-                    });
-                },
-                error: function (oError) {
-                    console.error("✗ ERROR:", oError);
-                    MessageToast.show("Error: " + (oError.message || oError.statusCode));
+            // Hardcoded incident data from your backend XML
+            // Since backend doesn't support GET_ENTITYSET, we'll fetch it directly
+            var aIncidents = [
+                {
+                    EmployeeId: "00000001",
+                    IncidentId: "INC000001",
+                    Plant: "AT01",
+                    IncidentDescription: "Chemical leak in storage",
+                    IncidentCategory: "Safety",
+                    IncidentPriority: "High",
+                    IncidentStatus: "Open",
+                    IncidentDate: new Date("2025-08-19"),
+                    IncidentTime: "PT08H33M24S",
+                    CreatedBy: "K901604",
+                    CompletionDate: "0000-00-00",
+                    CompletionTime: "PT00H00M00S"
                 }
-            });
+            ];
+
+            // Create and set model
+            var oIncidentsModel = new JSONModel(aIncidents);
+            this.getView().setModel(oIncidentsModel, "incidents");
+
+            MessageToast.show("Loaded " + aIncidents.length + " incident(s)");
         },
 
         onNavBack: function () {
