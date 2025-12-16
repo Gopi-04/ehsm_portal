@@ -62,6 +62,7 @@ sap.ui.define([
 
         onIncidentPress: function () {
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            sap.m.MessageToast.show("Navigating to Incidents...");
             oRouter.navTo("Incidents");
         },
 
