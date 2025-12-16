@@ -109,6 +109,13 @@
           "target": [
             "Incidents"
           ]
+        },
+        {
+          "name": "Risks",
+          "pattern": "risks",
+          "target": [
+            "Risks"
+          ]
         }
       ],
       "targets": {
@@ -121,8 +128,14 @@
           "name": "Dashboard"
         },
         "Incidents": {
-          "id": "Incidents",
-          "name": "Incidents"
+          "viewName": "Incidents",
+          "viewId": "incidents",
+          "viewLevel": 2
+        },
+        "Risks": {
+          "viewName": "Risks",
+          "viewId": "risks",
+          "viewLevel": 2
         }
       }
     },
