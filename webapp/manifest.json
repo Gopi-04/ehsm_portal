@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "http://AZKTLDS5CP.kcloud.com:8000/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/",
+        "uri": "/sap/opu/odata/sap/ZEHSM_PORTAL_GP_SRV/",
         "type": "OData",
         "settings": {
           "annotations": [],
